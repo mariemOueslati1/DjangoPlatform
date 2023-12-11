@@ -16,10 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from django.contrib import admin
+from django.urls import path
+from django.views.generic import TemplateView
+from elearningApp.views import CustomAdminView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('elearningApp.urls')),
+    path('custom_admin/', CustomAdminView.as_view(), name='custom_admin'),
+    path('user/', include('elearningApp.urls')),
+    path('', include('acceuil.urls')),
     path('courses/', include('courseApp.urls')),
     path('enrollments/', include('EnrollementApp.urls')),
     path('Material/',include('MaterialApp.urls')),
@@ -29,4 +35,6 @@ urlpatterns = [
     path('Interaction/', include('interactionApp.urls')),
     path('Readings/', include('readingStateApp.urls')),
     path('soap_service/', include('TutorDashboard.urls')),
+    path('soap_serviceStudent/', include('studentDashboard.urls')),
+    path('nortifications/',include('notificationApp.urls')),
 ]

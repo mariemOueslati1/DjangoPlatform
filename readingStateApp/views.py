@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import ReadingState
 from .serializers import ReadingSerializer , ReadingStateListSerializer
 from interactionApp.permissions import IsStudent
-
+from django.shortcuts import render
 class ReadingStateView(generics.CreateAPIView, generics.UpdateAPIView):
     serializer_class = ReadingSerializer
     permission_classes = [IsAuthenticated , IsStudent ]
@@ -35,3 +35,12 @@ class ListReadingStatesView(generics.ListAPIView):
     def get_queryset(self):
         # Retrieve all reading states for the authenticated user
         return ReadingState.objects.filter(student=self.request.user)
+
+    def render_read_states(self, queryset):
+        # Customize this function to render the readStates.html template
+        context = {'reading_states': queryset}
+        return render(self.request, 'reads.html', context)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        return self.render_read_states(queryset)

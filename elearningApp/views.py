@@ -18,6 +18,9 @@ from rest_framework.permissions import IsAuthenticated
 from django.urls import reverse
 
 from django.contrib.auth import logout as django_logout
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
 
 @permission_classes([AllowAny])
 
@@ -55,6 +58,8 @@ class LoginAPIView(APIView):
         username = request.data.get('username')
         password = request.data.get('password')
 
+        print("username : " + username + " password : " + password)
+
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
@@ -82,3 +87,14 @@ class LogoutAPI(APIView):
         login_url = reverse('login')
         return redirect(login_url)
 
+# your_app/views.py
+
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import TemplateView
+
+class CustomAdminView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = 'admin/custom_admin.html'
+
+    def test_func(self):
+        # Check if the user is staff
+        return self.request.user.is_staff

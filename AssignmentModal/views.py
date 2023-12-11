@@ -10,6 +10,9 @@ from MaterialApp.permissions import IsCourseTutor ,  CanUploadMaterialPermission
 from rest_framework.serializers import ValidationError
 from rest_framework.exceptions import PermissionDenied
 from django.http import Http404
+from SubmissionApp.models import Submission
+from .forms import AssignmentForm
+from django.template.response import TemplateResponse
 # Create your views here.
 class AddAssignmentView(generics.CreateAPIView):
     queryset = Assignment.objects.all()
@@ -45,50 +48,69 @@ class ListAssignmentView(generics.ListAPIView):
     def get_queryset(self):
         course_id = self.kwargs.get('course_id')
         course = get_object_or_404(Course, pk=course_id)
-        return Assignment.objects.filter(course=course)
+        assignments = Assignment.objects.filter(course=course)  
+        return assignments
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
 
         # Serialize the queryset and return the response
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        
+        # Get the course ID from the URL parameters
+        course_id = self.kwargs.get('course_id')
+
+
+        return render(request, 'assignment.html', {'assignemnts': serializer.data, 'user': request.user, 'course_id': course_id})
+
+
 
 class UpdateAssignmentView(generics.UpdateAPIView):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
     permission_classes = [IsAuthenticated, CanUploadMaterialPermission]
 
-    def get_object(self):
-        assignment_id = self.kwargs.get('assignment_id')
+    def get(self, request, *args, **kwargs):
         try:
-            return get_object_or_404(Assignment, pk=assignment_id)
-        except Http404:
-            # Customize the response when material_id doesn't exist
-            return Response({'error': 'Assignment  did not exist'}, status=status.HTTP_404_NOT_FOUND)
-        
+            instance = self.get_object()
+            self.check_object_permissions(request, instance)
+
+            form = AssignmentForm(initial={
+                'title': instance.title,
+                'description': instance.description,
+                'course ': instance.course
+                
+            })
+            
+            context = {'assignment': instance, 'form': form , 'courseId': instance.course.id , 'assignmentId': instance.pk}
+
+            # Render the template for the GET request
+            template_name = 'update_assignment.html'  # Change this to your actual template name
+            return TemplateResponse(request, template_name, context)
+
+        except PermissionDenied:
+            return Response({'error': 'You do not have permission to update this assignment.'}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def update(self, request, *args, **kwargs):
-        assignment_or_response = self.get_object()
+        try:
+            instance = self.get_object()
+            self.check_object_permissions(request, instance)
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
 
-        # Check if the result is a Response object
-        if isinstance(assignment_or_response, Response):
-            return assignment_or_response
+            # Return a response for the successful update
+            return Response({'detail': 'Assignment updated successfully.'}, status=status.HTTP_200_OK)
 
-        assignment = assignment_or_response
-
-        print("request user:", request.user)
-        print("material course tutor id:", assignment.course.tutor.id)
-
-        # Check if the requesting user is the tutor of the course
-        if request.user != assignment.course.tutor:
-            error_msg = "You do not have permission to update this assignement."
-            return Response({'error': error_msg}, status=status.HTTP_403_FORBIDDEN)
-
-        serializer = self.get_serializer(assignment, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
-        return Response({'detail': 'Assignment updated successfully.'}, status=status.HTTP_200_OK)
+        except PermissionDenied:
+            return Response({'error': 'You do not have permission to update this assignment.'}, status=status.HTTP_403_FORBIDDEN)
+        except ValidationError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 class DeleteAssignmentView(generics.DestroyAPIView):
     queryset = Assignment.objects.all()
