@@ -51,8 +51,17 @@ class EnrollmentCreateView(generics.CreateAPIView):
         try:
             course_id = self.kwargs.get('course_id')
             course = self.get_course(course_id)
-            serializer.save(student=self.request.user, course=course)
-            return JsonResponse({'message': 'Enrollment successful'})
+
+            # Check if there is available capacity
+            if course.enrollment_capacity > 0:
+                serializer.save(student=self.request.user, course=course)
+
+                # Decrement enrollment capacity
+                course.enrollment_capacity -= 1
+                course.save()
+                return JsonResponse({'message': 'Enrollment successful'})
+            else:
+                return JsonResponse({'error': 'No place available in this course.'})
         except PermissionDenied:
             raise serializers.ValidationError('You do not have permission to enroll in this course.')
         except Exception as e:

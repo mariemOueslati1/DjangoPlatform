@@ -5,7 +5,7 @@ from courseApp.models import Course
 # Create your models here.
 class Material(models.Model):
     title = models.CharField(max_length=255)
-    content = models.TextField()
+    content = models.FileField(upload_to='materials/')
     course = models.ForeignKey(Course, on_delete=models.CASCADE)  # Assuming the Course model is in the same app
     upload_date = models.DateTimeField(auto_now_add=True)
     

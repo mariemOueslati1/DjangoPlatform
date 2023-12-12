@@ -396,39 +396,48 @@
   });
   </script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Assuming you have buttons with class "enrollButton"
-        var enrollButtons = document.getElementsByClassName("enrollButton");
-
-        for (var i = 0; i < enrollButtons.length; i++) {
-            enrollButtons[i].addEventListener("click", function () {
-                // Get the course_id from the button's data attribute or any other method you prefer
-                var course_id = this.getAttribute("data-course-id");
-                var url = "{% url 'enrollment_create' course_id=0 %}".replace('0', course_id);
-
-                    // Send the AJAX request
-                    fetch(url, {
+    document.addEventListener("DOMContentLoaded", () => {
+        const enrollButtons = document.querySelectorAll(".enrollButton");
+    
+        enrollButtons.forEach((button) => {
+            const course_id = button.dataset.courseId;
+            const enrollmentStatus = localStorage.getItem(`enrollment_status_${course_id}`);
+    
+            if (enrollmentStatus === 'enrolled') {
+                button.disabled = true;
+                button.textContent = 'Enrolled';
+            }
+    
+            button.addEventListener("click", () => {
+                const url = `{% url 'enrollment_create' course_id=0 %}`.replace('0', course_id);
+    
+                fetch(url, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
-                        "X-CSRFToken": "{{ csrf_token }}",  // Include the CSRF token
+                        "X-CSRFToken": "{{ csrf_token }}",
                     },
-                    body: "csrfmiddlewaretoken={{ csrf_token }}",  // Include the CSRF token in the body
+                    body: "csrfmiddlewaretoken={{ csrf_token }}",
                 })
-                .then(function (response) {
+                .then((response) => {
                     if (!response.ok) {
                         throw new Error("Network response was not ok");
                     }
                     return response.json();
                 })
-                .then(function (data) {
-                    alert("enrolled successfully");
+                .then((data) => {
+                    alert("Enrolled successfully");
+                    // Update the button and local storage upon successful enrollment
+                    button.disabled = true;
+                    button.textContent = 'Enrolled';
+                    localStorage.setItem(`enrollment_status_${course_id}`, 'enrolled');
                 })
-                .catch(function (error) {
+                .catch((error) => {
                     alert("Error: " + error.message);
                 });
             });
-        }
+        });
     });
-</script>
+    </script>
+    
 {% endblock %}

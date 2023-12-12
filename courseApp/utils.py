@@ -7,12 +7,11 @@ def recognize_speech():
     with sr.Microphone() as source:
         print("Say something:")
         try:
-            audio = recognizer.listen(source, timeout=5)
-            print("Audio captured.")
-            text = recognizer.recognize_sphinx(audio)
+            audio = recognizer.listen(source, timeout=5)  # Adjust the timeout as needed
+            recognized_text = recognizer.recognize_google(audio)
 
-            print("Recognized:", text)
-            return text
+            print("You said:", recognized_text)  # Print the recognized text
+            return recognized_text
         except sr.UnknownValueError:
             print("Speech Recognition could not understand audio")
             return None
@@ -30,17 +29,30 @@ def get_student_names():
 def initialize_attendance_status(student_names):
     # Initialize attendance status for all students as 'Absent'
     return {student: 'Absent' for student in student_names}
+from difflib import SequenceMatcher
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
+
 
 def process_user_response(user_response, attendance_status):
     # Define keywords for attendance status
     present_keywords = ['present']
 
     # Check if each student's name is mentioned in the user response
-    for student in attendance_status:
-        if student.lower() in user_response.lower():
-            # Check for keywords to determine attendance status
-            if any(keyword in user_response.lower() for keyword in present_keywords):
-                attendance_status[student] = 'Present'
+    if (user_response):
+        for student in attendance_status:
+            if student.lower() in user_response.lower():
+                # Check for keywords to determine attendance status
+                if any(keyword in user_response.lower() for keyword in present_keywords):
+                    attendance_status[student] = 'Present'
+            else:
+                # Check for approximate match using similarity ratio
+                similarity_ratio = similar(student.lower(), user_response.lower())
+                print("similar :", similarity_ratio)
+                if similarity_ratio >= 0.5:  
+                    attendance_status[student] = 'Present'
+    
+    
 
     return attendance_status
 

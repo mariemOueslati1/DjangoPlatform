@@ -11,4 +11,5 @@ urlpatterns = [
         out_protocol=Soap11(),
     )),
     path('get_enrolled_student_count/<int:course_id>/', get_enrolled_student_count, name='get_enrolled_student_count'),
+    
 ]

@@ -72,7 +72,7 @@ class UpdateGradeView(generics.UpdateAPIView):
                 'grade': instance.grade,
                 'feedback': instance.feedback,
             })
-            context = {'Grade': instance, 'form': form, 'gradeId': instance.id ,'assignment': instance.assignment.id}
+            context = {'Grade': instance, 'form': form, 'gradeId': instance.id ,'assignmentId': instance.assignment.id}
             
             # Render the template for the GET request
             template_name = 'update_grade.html' 
@@ -130,11 +130,9 @@ class ListGradesView(generics.ListAPIView):
 
     def get_queryset(self):
         assignment_id = self.kwargs.get('assignment_id')
-        print(assignment_id)
         queryset = Grade.objects.filter(assignment_id=assignment_id)
-        # Check if the queryset is empty and raise Http404 if needed
-        
         return queryset
+
     def get(self, request, *args, **kwargs):
         # Call the get_queryset method to get the filtered queryset
         queryset = self.get_queryset()
@@ -142,8 +140,13 @@ class ListGradesView(generics.ListAPIView):
         # Serialize the data
         serializer = self.get_serializer(queryset, many=True)
 
-        # Render the HTML template with the serialized data
-        return render(request, 'grades/grades_list.html', {'grades': serializer.data})
+        # Pass the assignment_id to the template context
+        assignment_id = self.kwargs.get('assignment_id')
+        context = {'grades': serializer.data, 'assignment_id': assignment_id}
+
+        # Render the HTML template with the serialized data and assignment_id
+        return render(request, 'grades/grades_list.html', context)
+
 class ListGradesViewStudent(generics.ListAPIView):
 
     serializer_class = GradeSerializer

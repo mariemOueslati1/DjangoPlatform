@@ -81,7 +81,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 25px;
-
+     
   }
 
   #parcours-parcours .contentBox .box {
@@ -695,94 +695,77 @@
   }
 </style>
 <section id="parcours-parcours">
-  <h2>Update Material</h2>
-  {{materialId}}
-  {{courseId}}
+  <h2>Update Grade</h2>
   
 
   
   <div class="contentBox">
-    {% if request.user|has_permission:'courseApp.upload_materials' %}
-    <form method="post" id="update-material-form" data-material-id="{{ materialId }}" data-course-id="{{ courseId }}">
+    {% if request.user|has_permission:'courseApp.evaluate_assignments' %}
+    <form method="post" id="update-grade-form" data-grade-id="{{ gradeId }}" data-assignment-id="{{ assignment }}">
       {% csrf_token %}
       <div class="form-group">
-        <label for="{{ form.title.id_for_label }}">Title</label>
-        <input type="text" id="{{ form.title.id_for_label }}" name="{{ form.title.name }}" value="{{ form.title.value }}" class="form-style">
+        <label for="{{ form.grade.id_for_label }}">Grade</label>
+        <input type="text" id="{{ form.grade.id_for_label }}" name="{{ form.grade.name }}" value="{{ form.grade.value }}" class="form-style">
 
-        {% if form.title.help_text %}
-            <small class="form-text text-muted">{{ form.title.help_text }}</small>
+        {% if form.grade.help_text %}
+            <small class="form-text text-muted">{{ form.grade.help_text }}</small>
         {% endif %}
       </div>
       <div class="form-group">
-        <label for="{{ form.content.id_for_label }}">Content</label>
-        <input type="file" name="{{ form.content.name }}" id="{{ form.content.id_for_label }}" class="form-style">
-        {% if form.content.help_text %}
-            <small class="form-text text-muted">{{ form.content.help_text }}</small>
+        <label for="{{ form.feedback.id_for_label }}">Feedback</label>
+        <textarea id="{{ form.feedback.id_for_label }}" name="{{ form.feedback.name }}" class="form-style">{{ form.feedback.value }}</textarea>
+        {% if form.feedback.help_text %}
+            <small class="form-text text-muted">{{ form.feedback.help_text }}</small>
         {% endif %}
-    </div>
-    
-  
-  <div class="form-group">
-    <label for="{{ form.document_type.id_for_label }}">Document Type</label>
-    <select id="{{ form.document_type.id_for_label }}" name="{{ form.document_type.name }}" class="form-style">
-        {% for value, label in form.document_type.field.choices %}
-            <option value="{{ value }}">{{ label }}</option>
-        {% endfor %}
-    </select>
-    {% if form.document_type.help_text %}
-        <small class="form-text text-muted">{{ form.document_type.help_text }}</small>
-    {% endif %}
+      </div>
+
+      <button class="inputBtn" type="button" onclick="updateGrade()">Update Grade</button>
+    </form>
 </div>
 
-  
+<script>
+    function updateGrade() {
+        var form = document.getElementById('update-grade-form');
+        var gradeId = form.dataset.gradeId;
+        var assignmentId = form.getAttribute('data-assignment-id');
+        var formData = new FormData(form);
 
-    
+        var jsonData = {};
+        formData.forEach((value, key) => {
+            jsonData[key] = value;
+        });
 
-      <button class="inputBtn" type="button" onclick="updateMaterial()">Update Material</button>
-  </form>
-  </div>
-  <script>
-function updateMaterial() {
-    var form = document.getElementById('update-material-form');
-    var materialId = form.dataset.materialId;
-    var courseId = form.getAttribute('data-course-id');
-    var formData = new FormData(form);
+        fetch("{% url 'update-grade' pk=gradeId %}", {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify(jsonData),
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Grade update failed');
+            }
+        })
+        .then(data => {
+            console.log(data.detail);
+            alert(data.detail);
+            window.location.href = "{% url 'list_grades' assignment_id=assignmentId %}";
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Grade update failed');
+        });
+    }
+</script>
 
-    // Create a PUT request to the API
-    fetch("/Material/materials/" + materialId + "/update/", {
-        method: 'PUT',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-        },
-        body: formData,
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json(); // Parse the JSON response
-        } else {
-            throw new Error('Material update failed');
-        }
-    })
-    .then(data => {
-        console.log(data.detail); // Handle the successful response
-        alert(data.detail);
-        window.location.href = "/Material/materials/materialsList/" + courseId + "/";
-    })
-    .catch(error => {
-        console.error(error);
-        alert('Material update failed');
-    });
-}
-
-  </script>
-  {% else %}
-  <p>You do not have permission to update this course.</p>
+{% else %}
+<p>You do not have permission to update this grade.</p>
 {% endif %}
 
 
-
-
-
 </section>
-
 {% endblock %}

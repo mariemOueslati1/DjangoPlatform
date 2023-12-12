@@ -1,0 +1,29 @@
+<!-- course_list.html -->
+{% extends 'base.html' %}
+{% load permissions_tags %}
+{% load static %}
+{% block title %}Course-Details{% endblock %}
+
+{% block content %}
+<style>
+    .detail {
+        
+        width: 100vw;
+        height: 70vh;
+        padding: 5% 5%;
+    }
+</style>
+<section class="detail">
+    <h2>Attendance Status</h2>
+    <ul>
+        {% for student, status in attendance_status.items %}
+            <li>{{ student }}: {{ status }}</li>
+        {% endfor %}
+    </ul>
+</section>
+
+
+
+
+
+{% endblock %}

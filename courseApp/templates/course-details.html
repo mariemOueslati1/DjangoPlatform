@@ -13,14 +13,8 @@
 <p>Description: {{ course.description }}</p>
 </section>
 
-
-
-
-
-
-
-
 <style>
+
     .containertable {
         z-index: 1;
         position: relative;
@@ -28,6 +22,7 @@
         justify-content: center;
         max-width: 1200px;
         flex-wrap: wrap;
+        background: #1b263b;
         
     }
 
@@ -156,7 +151,11 @@
                         <img class="image" src="{% static 'acceuil/images/eleve.png' %}" alt="" />
                         
                             {% if request.user|has_permission:'courseApp.create_manage_courses' %}
-                                <button type="button" class="btnDetails">Initiate Voice Call</button>
+                            <form action="{% url 'voice_call' %}" method="post">
+                                {% csrf_token %}
+                                <button class="btnDetails" type="submit">Make Voice Call</button>
+                            </form>
+                            
                             {% endif %}
                             {% if request.user|has_permission:'courseApp.can_enroll' %}
                             <a class="btnDetails" href="{% url 'get_course_metrics' course_id=course.id %}">Course metrics</a>

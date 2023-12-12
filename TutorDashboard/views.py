@@ -85,24 +85,6 @@ def get_enrolled_student_count(request, course_id):
     except Exception as e:
         # Handle errors
         return render(request, 'analytics.html', {'error': str(e)})
-    
-
-from .utils import recognize_speech, process_user_response, get_student_names, initialize_attendance_status
-
-def voice_call(request):
-    if request.method == 'POST':
-        user_response = recognize_speech()
-        print("user response : ", user_response)
-
-        student_names = get_student_names()
-        attendance_status = initialize_attendance_status(student_names)
-
-        attendance_status = process_user_response(user_response, attendance_status)
-        for student, status in attendance_status.items():
-            print(student, status)
-        return render(request, 'result.html', {'attendance_status': attendance_status})
-    else:
-        return render(request, 'test.html')
 
 
 

@@ -699,8 +699,11 @@
     }
   </style>
 <section class="details">
-    <h1>{{ material.title }}</h1>
-    <p>Description: {{ material.content }}</p>
+    <h1> Material ID : {{ material.title }}</h1>
+    <form id="readForm" data-material-id="{{ material.id }}" data-interaction-type="read" action="{% url 'material_read' material_id=material.id %}" target="_blank">
+        {% csrf_token %}
+        <button type="submit" class="readButton">Read Material</button>
+    </form>
 </section>
 <style>
     .containertable {
@@ -710,7 +713,7 @@
         justify-content: center;
         max-width: 1200px;
         flex-wrap: wrap;
-        background-color: orange;
+        background: #1b263b;
     }
 
     .containertable .card {
@@ -736,7 +739,7 @@
         transform: translateY(100px);
         opacity: 0;
         transition: 0.5s;
-        background-color: green;
+        
         
         
     }
@@ -1441,6 +1444,32 @@
         glare: true,
         "max-glare": 1,
     });
+</script>
+
+<script>
+    function readMaterial() {
+    var materialId = document.getElementById('readForm').getAttribute('data-material-id');
+    console.log("material id in javascript ", materialId);
+    var csrfToken = document.getElementsByName('csrfmiddlewaretoken')[0].value;
+
+    fetch("{% url 'material_read' material_id=0 %}".replace('0', materialId), {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': csrfToken,
+        },
+    })
+    .then(response => {
+        if (response.ok) {
+            // Open the file in a new tab
+            window.open(response.url, '_blank');
+        } else {
+            throw new Error('Failed to read material');
+        }
+    })
+    .catch(error => {
+        console.error('Read error:', error);
+    });
+}
 </script>
 
 {% endblock %}

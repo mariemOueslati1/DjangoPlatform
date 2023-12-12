@@ -9,6 +9,8 @@ urlpatterns = [
     path('courses/<int:pk>/', DeleteCourseView.as_view(), name='course-delete'),
     path('courses/update/<int:pk>/', UpdateCourseView.as_view(), name='course-update'),
     path('coursesDetails/<int:pk>/', CourseDetailAPIView.as_view(), name='course-detail'),
+    path('voice_call/', voice_call, name='voice_call'),
+
 ]
 
 
